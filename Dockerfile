@@ -1,5 +1,6 @@
 #
 # Kuali Coeus on tomcat Dockerfile
+# This docker image works with the jefferyb/kuali_db_mysql docker image...
 #
 # https://github.com/jefferyb/docker-tomcat-kuali-coeus
 #
@@ -11,21 +12,13 @@
 #    docker run -d --name kuali_tomcat -h EXAMPLE.COM --link kuali_db_mysql:kuali_db_mysql -p 8080:8080 jefferyb/kuali_tomcat
 
 # Pull base image.
-FROM ubuntu:14.04.2
+FROM ubuntu:14.04
 MAINTAINER Jeffery Bagirimvano <jeffery.rukundo@gmail.com>
 
 # Kuali Release File
-ENV KC_VERSION="coeus-1506.69"
 ENV KC_CONFIG_XML_LOC="/opt/kuali/main/dev"
-ENV KC_WAR_FILE_LINK="https://goo.gl/RjyrIw"
-ENV KC_PROJECT_RICE_XML="https://goo.gl/8hnZYq"
-ENV KC_PROJECT_COEUS_XML="https://goo.gl/nN3jNy"
 
 # TOMCAT RELATED
-ENV TOMCAT_MAJOR 8
-ENV TOMCAT_VERSION 8.0.24
-ENV TOMCAT_LINK https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz
-ENV TOMCAT_FILE="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
 ENV TOMCAT_LOCATION="/opt/apache-tomcat/tomcat8"
 
 # MySQL Connector Java
@@ -40,14 +33,20 @@ RUN mkdir -p /SetupTomcat
 
 ADD SetupTomcat /SetupTomcat
 
-# Install MySQL.
+# Install Tomcat.
 RUN \
   apt-get update && \
-	apt-get install -y software-properties-common && \
-	add-apt-repository -y ppa:openjdk-r/ppa && \
+  apt-get install -y curl && \
+  TOMCAT_MAJOR="8" && \
+  TOMCAT_VERSION="$(curl -s https://tomcat.apache.org/download-80.cgi | grep -A 7 '</select><input type="submit" value="Change">' | grep '<h3 id="' | sed 's/<h3 id="//' | sed 's/">.*//')" && \
+  TOMCAT_LINK="https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz" && \
+  TOMCAT_FILE="apache-tomcat-${TOMCAT_VERSION}.tar.gz" && \
+
+  apt-get install -y software-properties-common && \
+	add-apt-repository -y ppa:webupd8team/java && \
+  echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
 	apt-get update && \
-	apt-get install -y wget zip unzip openjdk-8-jdk tar graphviz && \
-	apt-get remove -y openjdk-7-jre-headless && \
+	apt-get install -y wget zip unzip oracle-java8-installer tar graphviz && \
 	cd /SetupTomcat  && \
 	wget ${TOMCAT_LINK} && \
 	mkdir -p ${TOMCAT_LOCATION} && \
@@ -62,6 +61,12 @@ RUN \
 	sed -i 's/<Context>/<Context>\n\n    <!-- BEGIN - For Kuali Coeus -->/' ${TOMCAT_LOCATION}/conf/context.xml && \
 	mkdir -p ${KC_CONFIG_XML_LOC} && \
 	cp -f /SetupTomcat/kc-config.xml ${KC_CONFIG_XML_LOC}/kc-config.xml && \
+
+  KC_VERSION="$(curl -s https://raw.githubusercontent.com/kuali/kc/master/pom.xml | egrep -m 1 "<version>" | sed 's/<version>//' | sed 's/\..*//' | awk '{print $1}')" && \
+	KC_WAR_FILE_LINK="http://www.kuali.erafiki.com/${KC_VERSION}/mysql/kc-dev.war" && \
+	KC_PROJECT_RICE_XML="http://www.kuali.erafiki.com/${KC_VERSION}/xml_files/rice-xml-${KC_VERSION}.zip" && \
+	KC_PROJECT_COEUS_XML="http://www.kuali.erafiki.com/${KC_VERSION}/xml_files/coeus-xml-${KC_VERSION}.zip" && \
+
 	wget ${KC_WAR_FILE_LINK} -O ${TOMCAT_LOCATION}/webapps/kc-dev.war && \
 	mkdir -p ${TOMCAT_LOCATION}/webapps/ROOT/xml_files && \
 	wget ${KC_PROJECT_RICE_XML} -O ${TOMCAT_LOCATION}/webapps/ROOT/xml_files/rice-xml-$(echo ${KC_VERSION} | sed 's/coeus-//').zip && \
@@ -74,4 +79,3 @@ EXPOSE 8080
 
 # Define default command.
 CMD export TERM=vt100; sed -i "s/localhost/$(hostname -f)/" ${KC_CONFIG_XML_LOC}/kc-config.xml; sed -i "s/Kuali-Coeus-Version/${KC_VERSION}/" ${KC_CONFIG_XML_LOC}/kc-config.xml; ${TOMCAT_LOCATION}/bin/startup.sh; tailf ${TOMCAT_LOCATION}/logs/catalina.out
-
