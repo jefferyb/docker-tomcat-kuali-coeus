@@ -1,0 +1,51 @@
+# To run it, do:
+#   $ docker-compose up -d
+
+version: '2'
+
+services:
+  kuali-coeus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080   # Don't forget to set KUALI_APP_URL_PORT to the same port
+    ### Environment vars for kc-config.xml
+    environment:
+      - "KUALI_APP_URL=localhost"               # Where you want to access the kuali application. http://
+      - "KUALI_APP_URL_PORT=8080"               # The port number
+      - "MYSQL_HOSTNAME=kuali-coeus-database"
+      - "MYSQL_PORT=3306"
+      - "MYSQL_DATABASE=kualicoeusdb"
+      - "MYSQL_USER=kcusername"
+      - "MYSQL_PASSWORD=kcpassword"
+      - "TZ=America/Chicago"
+    image:          jefferyb/kuali_tomcat
+    container_name: kuali-coeus-application
+    hostname:       kuali-coeus-application
+    restart:        always
+    ### UNCOMMENT BELOW TO BUILD/RUN THE DATABASE 
+    # links:
+    #   - kuali-coeus-database
+
+#   kuali-coeus-database:
+#     ### Uncomment below if you want to build it
+#     # build:
+#     #   context: .
+#     #   dockerfile: Dockerfile-mysql
+#     environment:
+#       - "MYSQL_ROOT_PASSWORD=Chang3m3t0an0th3r"
+#       - "MYSQL_DATABASE=kualicoeusdb"
+#       - "MYSQL_USER=kcusername"
+#       - "MYSQL_PASSWORD=kcpassword"
+#       - "TZ=America/Chicago"
+#     image:          jefferyb/kuali_db_mysql
+#     container_name: kuali-coeus-database
+#     hostname:       kuali-coeus-database
+#     restart:        always
+#     volumes:
+#       - kuali-coeus-database-data:/var/lib/mysql
+#
+# volumes:
+#   kuali-coeus-database-data:
+#     driver: local
