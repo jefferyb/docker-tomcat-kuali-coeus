@@ -47,9 +47,9 @@ ENV SPRING_INSTRUMENTATION_TOMCAT_LINK="http://central.maven.org/maven2/org/spri
 # Install Tomcat
 RUN \
     apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl w3m && \
     TOMCAT_MAJOR="8" && \
-    TOMCAT_VERSION="$(curl -s https://tomcat.apache.org/download-80.cgi | grep -A 7 '</select><input type="submit" value="Change">' | grep '<h3 id="' | sed 's/<h3 id="//' | sed 's/">.*//')" && \
+    TOMCAT_VERSION="$(w3m https://tomcat.apache.org/download-80.cgi -dump | grep "KEYS |" | sed 's/KEYS | //'  | sed 's/ |.*//')" && \
     TOMCAT_LINK="https://www.apache.org/dist/tomcat/tomcat-$TOMCAT_MAJOR/v$TOMCAT_VERSION/bin/apache-tomcat-$TOMCAT_VERSION.tar.gz" && \
     TOMCAT_FILE="apache-tomcat-${TOMCAT_VERSION}.tar.gz" && \
     apt-get install -y software-properties-common && \
@@ -72,7 +72,7 @@ RUN \
     mkdir -p ${KC_CONFIG_XML_LOC} && \
     cp -f /setup_files/kc-config.xml ${KC_CONFIG_XML_LOC}/kc-config.xml && \
 
-    KC_VERSION="$(curl -s https://raw.githubusercontent.com/kuali/kc/master/pom.xml | egrep -m 1 "<version>" | sed 's/<version>//' | sed 's/\..*//' | awk '{print $1}')" && \
+    KC_VERSION="$(w3m https://raw.githubusercontent.com/kuali/kc/master/pom.xml -dump | grep -m 1 "<version>" | sed 's/.*.<version>//' | sed 's/\..*//')" && \
     KC_WAR_FILE_LINK="http://www.kuali.erafiki.com/${KC_VERSION}/mysql/kc-dev.war" && \
     KC_PROJECT_RICE_XML="http://www.kuali.erafiki.com/${KC_VERSION}/xml_files/rice-xml-${KC_VERSION}.zip" && \
     KC_PROJECT_COEUS_XML="http://www.kuali.erafiki.com/${KC_VERSION}/xml_files/coeus-xml-${KC_VERSION}.zip" && \
@@ -90,7 +90,7 @@ EXPOSE 8080
 
 # Define default command.
 CMD \
-    KC_VERSION="$(curl -s https://raw.githubusercontent.com/kuali/kc/master/pom.xml | egrep -m 1 "<version>" | sed 's/<version>//' | sed 's/\..*//' | awk '{print $1}')"; \
+    KC_VERSION="$(w3m https://raw.githubusercontent.com/kuali/kc/master/pom.xml -dump | grep -m 1 "<version>" | sed 's/.*.<version>//' | sed 's/\..*//')"; \
     sed -i "3 s/KUALI_APP_URL/${KUALI_APP_URL}/" ${KC_CONFIG_XML_LOC}/kc-config.xml; \
     sed -i "4 s/KUALI_APP_URL_PORT/${KUALI_APP_URL_PORT}/" ${KC_CONFIG_XML_LOC}/kc-config.xml; \
     sed -i "s/KUALI_COEUS_VERSION/KualiCo ${KC_VERSION}/" ${KC_CONFIG_XML_LOC}/kc-config.xml; \
