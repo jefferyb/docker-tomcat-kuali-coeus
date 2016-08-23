@@ -1,5 +1,4 @@
-[![](https://images.microbadger.com/badges/version/jefferyb/kuali_tomcat.svg)](http://microbadger.com/images/jefferyb/kuali_tomcat "Get your own version badge on microbadger.com")
-[![](https://images.microbadger.com/badges/image/jefferyb/kuali_tomcat.svg)](http://microbadger.com/images/jefferyb/kuali_tomcat "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/jefferyb/kuali_tomcat.svg)](http://microbadger.com/images/jefferyb/kuali_tomcat "Get your own version badge on microbadger.com") [![](https://images.microbadger.com/badges/image/jefferyb/kuali_tomcat.svg)](http://microbadger.com/images/jefferyb/kuali_tomcat "Get your own image badge on microbadger.com")
 
 # Kuali Coeus Tomcat Dockerfile
 
